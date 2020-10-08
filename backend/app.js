@@ -6,20 +6,24 @@ const app = express();
 const bodyParser = require('body-parser');
 //Import de mongoose pour la connexion avec la BD mongo
 const mongoose = require('mongoose');
-//Import des routes por l'authantification
+//Import des routes pour l'authantification
 const userRoutes = require('./routes/user');
+//Import des routes pour les sauces
+const saucesRoutes = require('./routes/sauces');
+//Import du path pour pouvoir touver les images de la directory images
+const path = require('path');
 //import de dotenv pour gérer des variables cachées
 require('dotenv').config();
 
 //Connexion a la BD avec protection des données les variables de dotenv
+mongoose.set('useCreateIndex', true);
 mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER}/${process.env.DB_NAME}?retryWrites=true&w=majority`,
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
-
-//création des header pour donner acces et ne pas avoir d'érreur de CORS (Cross-origin resource sharing)
+  //Création de header pour autoriser l'acces et enlever les érreurs de CORS (Cross Origin Resource Sharing)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
@@ -27,12 +31,17 @@ app.use((req, res, next) => {
   next();
 });
 
+
 //body parser permet la transformation des corps de la requête en json
 app.use(bodyParser.json());
-
-
-
+//------------Création de middleware ---------------------\\
+//Middleware pour gérer les liens vers la directory des images
+app.use('/images', express.static(path.join(__dirname, 'images')));
+//Middleware pour gérer le lien vers les sauces via le controllers
+app.use('/api/sauces', saucesRoutes);
+//Middleware pour gérer le lien vers l'authentification utilisateur via le controllers
 app.use('/api/auth', userRoutes);
+
 
 //Export de l'application app
 module.exports = app;
