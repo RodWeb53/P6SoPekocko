@@ -10,8 +10,11 @@ require('dotenv').config();
 exports.signup = (req, res, next) => {
   bcrypt.hash(req.body.password, 10)
     .then(hash => {
+      //masquage de l'adresse mail avant l'envoie dans la BD avec un chiffrement base 64
+      let buf = new Buffer.from(req.body.email);
+      let emailCacher = buf.toString('base64');
       const user = new User({
-        email: req.body.email,
+        email: emailCacher,
         password: hash
       });
       user.save()
@@ -22,7 +25,10 @@ exports.signup = (req, res, next) => {
 };
 
 exports.login = (req, res, next) => {
-  User.findOne({ email: req.body.email })
+  //création d'un chiffrement base 64 sur l'adresse mail avant la vérification de l'adresse mail
+  let buf = new Buffer.from(req.body.email);
+  let emailCacher = buf.toString('base64');
+  User.findOne({ email: emailCacher })
     .then(user => {
       if (!user) {
         return res.status(401).json({ error: 'Utilisateur non trouvé !' });

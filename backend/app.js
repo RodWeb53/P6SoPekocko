@@ -23,7 +23,7 @@ mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
-  //Création de header pour autoriser l'acces et enlever les érreurs de CORS (Cross Origin Resource Sharing)
+  //Création de header pour autoriser l'acces et enlever les erreurs de CORS (Cross Origin Resource Sharing)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
