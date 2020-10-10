@@ -14,6 +14,8 @@ const saucesRoutes = require('./routes/sauces');
 const path = require('path');
 //import de dotenv pour gérer des variables cachées
 require('dotenv').config();
+//Import de helmet pour la sécurisation contre les injections
+const helmet = require("helmet");
 
 //Connexion a la BD avec protection des données les variables de dotenv
 mongoose.set('useCreateIndex', true);
@@ -31,7 +33,8 @@ app.use((req, res, next) => {
   next();
 });
 
-
+//Utilisation de helmet contre les injections de scripts
+app.use(helmet());
 //body parser permet la transformation des corps de la requête en json
 app.use(bodyParser.json());
 //------------Création de middleware ---------------------\\
