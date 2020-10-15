@@ -16,6 +16,8 @@ const path = require('path');
 require('dotenv').config();
 //Import de helmet pour la sécurisation contre les injections
 const helmet = require("helmet");
+//import de mongo sanitize
+const mongoSanitize = require('express-mongo-sanitize');
 
 //Connexion a la BD avec protection des données les variables de dotenv
 mongoose.set('useCreateIndex', true);
@@ -37,6 +39,8 @@ app.use((req, res, next) => {
 app.use(helmet());
 //body parser permet la transformation des corps de la requête en json
 app.use(bodyParser.json());
+//Utilisation de mongoSanitize pour remplacer les caractères illicite en _
+app.use(mongoSanitize({ replaceWith: '_' }));
 //------------Création de middleware ---------------------\\
 //Middleware pour gérer les liens vers la directory des images
 app.use('/images', express.static(path.join(__dirname, 'images')));

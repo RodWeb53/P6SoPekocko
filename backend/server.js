@@ -1,7 +1,10 @@
 //Import du package HTTP de node
 const http = require('http');
+// pour la version de production mettre :''const http = require('https');'' à la place de la ligne précedente
 //Import de l'application app
 const app = require('./app');
+
+const fs = require('fs');
 
 const normalizePort = val => {
   const port = parseInt(val, 10);
@@ -50,3 +53,4 @@ server.on('listening', () => {
 });
 
 server.listen(port);
+
