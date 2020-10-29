@@ -2,6 +2,7 @@
 const Sauce = require('../models/sauces');
 //création de la constante fs pour gérer la manipulation des fichiers image
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
 
 //------------- Lecture pour une sauce via l'ID ------------\\
 exports.getOneSauces = (req, res, next) => {
@@ -31,14 +32,16 @@ exports.createSauces = (req, res, next) => {
 
 //------------- Modification d'une sauce --------------\\
 //suite passage soutenance modification pour jouter un controle sur l'ID du user
-//Fonctionne si on ne modifie pas l'image sinon bug
 //Met à jour la sauce et son image via son ID
 exports.modifySauces = (req, res, next) => {
+  //ajout du décodage de la clé token pour récupérer le user Id (correctif soutenance)
+  const token = req.headers.authorization.split(' ')[1];
+  const decodedToken = jwt.verify(token, `${process.env.DB_USER}`);
+  const userId = decodedToken.userId;
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
-      console.log('Modification : sauce.userId : ' + sauce.userId); //ok dans les 2 types de modification
-      console.log('Modification : req.body.userId : ' + req.body.userId); //Ok si on ne change pas l'image
-      if (sauce.userId === req.body.userId) {
+      //Ajout de la condition IF pour le controle du user Id (correctif soutenance)
+      if (sauce.userId === userId) {
         const thingObject = req.file ?
         {
           ...JSON.parse(req.body.sauce),
@@ -56,18 +59,28 @@ exports.modifySauces = (req, res, next) => {
 
 
 //------------- suppression d'une sauce ------------------\\
+// correction suite passage soutenance pour ajouter un controle du userId via le token car le user n'est pas passé par le front
 exports.deleteSauces = (req, res, next) => {
+  //ajout du décodage de la clé token pour récupérer le user Id (correctif soutenance)
+  const token = req.headers.authorization.split(' ')[1];
+  const decodedToken = jwt.verify(token, `${process.env.DB_USER}`);
+  const userId = decodedToken.userId;
   //recupération de l'id avec la méthodes findOne
   Sauce.findOne({ _id: req.params.id })
-    .then(sauce => {
-      const filename = sauce.imageUrl.split('/images/')[1];
-      //suppression du fichier image avec fs et unlink
-      fs.unlink(`images/${filename}`, () => {
-        //suppression de la BD avec la méthode deleteOne
-        Sauce.deleteOne({ _id: req.params.id })
-          .then(() => res.status(200).json({ message: 'Objet supprimé !'}))
-          .catch(error => res.status(400).json({ error })); 
-      });
+      .then(sauce => {
+        //ajout de la condition IF pour le controle du user Id (correctif soutenance)
+        if (sauce.userId === userId) {
+          const filename = sauce.imageUrl.split('/images/')[1];
+          //suppression du fichier image avec fs et unlink
+          fs.unlink(`images/${filename}`, () => {
+            //suppression de la BD avec la méthode deleteOne
+            Sauce.deleteOne({ _id: req.params.id })
+              .then(() => res.status(200).json({ message: 'Objet supprimé !'}))
+              .catch(error => res.status(400).json({ error })); 
+        });
+      } else {
+        throw 'Suppression impossible de la sauce !';
+      }
     })
     .catch(error => res.status(500).json({ error }));
 };
@@ -86,7 +99,7 @@ exports.getAllSauces = (req, res, next) => {
 exports.likesDislikes = (req, res) => {
   Sauce.findOne({_id: req.params.id})
     .then((sauce) => {
-      //modification suite soutenance pour mettre un controle sur le user ID lors du likes ou dislikes
+      //modification suite soutenance pour mettre un controle sur le user ID lors du likes ou dislikes (correctif soutenance)
       //si l'utilisateur clic sur likes et qu'il est pas connu dans likes
       if (req.body.like === 1 && !sauce.usersLiked.includes(req.body.userId)) {    
         Sauce.updateOne({_id: req.params.id}, { $inc: {likes: 1}, $push: {usersLiked: req.body.userId}}, {_id: req.params.id})
